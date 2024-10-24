@@ -1,0 +1,474 @@
+[
+    {
+        "$lookup": {
+            "from": "dataReceivedNetSalary",
+            "localField": "1",
+            "foreignField": "1",
+            "as": "dataReceivedNetSalary"
+        }
+    },
+    {
+        "$unwind": "$dataReceivedNetSalary"
+    },
+    {
+        "$match": {
+            "dataReceivedNetSalary.tnct.ID": "1"
+        }
+    },
+    {
+        "$addFields": {
+            "dataReceivedNetSalary": "$dataReceivedNetSalary"
+        }
+    },
+    {
+        "$addFields": {
+            "public.output.jsonData.calculation.Total_salary_without_tax": {
+                "$add": [
+                    "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                    {
+                        "$multiply": [
+                            {
+                                "$sum": {
+                                    "$map": {
+                                        "input": "$dataReceivedNetSalary.tnct.chi_tieu",
+                                        "as": "chi_tieu",
+                                        "in": "$$chi_tieu.so_tien"
+                                    }
+                                }
+                            },
+                            {
+                                "$switch": {
+                                    "branches": [
+                                        {
+                                            "case": {
+                                                "$lt": [
+                                                    "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                    55
+                                                ]
+                                            },
+                                            "then": 0
+                                        },
+                                        {
+                                            "case": {
+                                                "$and": [
+                                                    {
+                                                        "$gte": [
+                                                            "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                            55
+                                                        ]
+                                                    },
+                                                    {
+                                                        "$lt": [
+                                                            "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                            71
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "then": 0.6
+                                        },
+                                        {
+                                            "case": {
+                                                "$and": [
+                                                    {
+                                                        "$gte": [
+                                                            "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                            71
+                                                        ]
+                                                    },
+                                                    {
+                                                        "$lt": [
+                                                            "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                            91
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "then": 0.8
+                                        },
+                                        {
+                                            "case": {
+                                                "$gte": [
+                                                    "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                    91
+                                                ]
+                                            },
+                                            "then": 1.1
+                                        }
+                                    ],
+                                    "default": 0
+                                }
+                            }
+                        ]
+                    },
+                    "$dataReceivedNetSalary.tnct.Bonus"
+                ]
+            }
+        }
+    },
+    {
+        "$addFields": {
+            "public.output.jsonData.calculation.Luong_dong_bao_hiem": {
+                "$multiply": [
+                    {
+                        "$sum": [
+                            "$dataReceivedNetSalary.insurance.BHXH",
+                            "$dataReceivedNetSalary.insurance.BHTN",
+                            "$dataReceivedNetSalary.insurance.BHYT"
+                        ]
+                    },
+                    {
+                        "$add": [
+                            "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                            {
+                                "$multiply": [
+                                    {
+                                        "$sum": {
+                                            "$map": {
+                                                "input": "$dataReceivedNetSalary.tnct.chi_tieu",
+                                                "as": "chi_tieu",
+                                                "in": "$$chi_tieu.so_tien"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "$switch": {
+                                            "branches": [
+                                                {
+                                                    "case": {
+                                                        "$lt": [
+                                                            "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                            55
+                                                        ]
+                                                    },
+                                                    "then": 0
+                                                },
+                                                {
+                                                    "case": {
+                                                        "$and": [
+                                                            {
+                                                                "$gte": [
+                                                                    "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                                    55
+                                                                ]
+                                                            },
+                                                            {
+                                                                "$lt": [
+                                                                    "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                                    71
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "then": 0.6
+                                                },
+                                                {
+                                                    "case": {
+                                                        "$and": [
+                                                            {
+                                                                "$gte": [
+                                                                    "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                                    71
+                                                                ]
+                                                            },
+                                                            {
+                                                                "$lt": [
+                                                                    "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                                    91
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "then": 0.8
+                                                },
+                                                {
+                                                    "case": {
+                                                        "$gte": [
+                                                            "$dataReceivedNetSalary.tnct.Budget_performance",
+                                                            91
+                                                        ]
+                                                    },
+                                                    "then": 1.1
+                                                }
+                                            ],
+                                            "default": 0
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "$addFields": {
+            "public.output.jsonData.calculation.Thue_thu_nhap_ca_nhan": {
+                "$switch": {
+                    "branches": [
+                        {
+                            "case": {
+                                "$eq": [
+                                    "$dataReceivedNetSalary.tncn.Hệ_số",
+                                    "TN*5%"
+                                ]
+                            },
+                            "then": {
+                                "$multiply": [
+                                    {
+                                        "$subtract": [
+                                            {
+                                                "$subtract": [
+                                                    "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                                                    "$dataReceivedNetSalary.tncn.Giảm_trừ_bản_thân"
+                                                ]
+                                            },
+                                            "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                                        ]
+                                    },
+                                    0.05
+                                ]
+                            }
+                        },
+                        {
+                            "case": {
+                                "$eq": [
+                                    "$dataReceivedNetSalary.tncn.Hệ_số",
+                                    "TN*10%-0.25 triệu VND"
+                                ]
+                            },
+                            "then": {
+                                "$subtract": [
+                                    {
+                                        "$multiply": [
+                                            {
+                                                "$subtract": [
+                                                    {
+                                                        "$subtract": [
+                                                            "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                                                            "$dataReceivedNetSalary.tncn.Giảm_trừ_bản_thân"
+                                                        ]
+                                                    },
+                                                    "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                                                ]
+                                            },
+                                            0.1
+                                        ]
+                                    },
+                                    0.25
+                                ]
+                            }
+                        },
+                        {
+                            "case": {
+                                "$eq": [
+                                    "$dataReceivedNetSalary.tncn.Hệ_số",
+                                    "TN*15%-0.75 triệu VND"
+                                ]
+                            },
+                            "then": {
+                                "$subtract": [
+                                    {
+                                        "$multiply": [
+                                            {
+                                                "$subtract": [
+                                                    {
+                                                        "$subtract": [
+                                                            "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                                                            "$dataReceivedNetSalary.tncn.Giảm_trừ_bản_thân"
+                                                        ]
+                                                    },
+                                                    "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                                                ]
+                                            },
+                                            0.15
+                                        ]
+                                    },
+                                    0.75
+                                ]
+                            }
+                        },
+                        {
+                            "case": {
+                                "$eq": [
+                                    "$dataReceivedNetSalary.tncn.Hệ_số",
+                                    "TN*20%-1.65 triệu VND"
+                                ]
+                            },
+                            "then": {
+                                "$subtract": [
+                                    {
+                                        "$multiply": [
+                                            {
+                                                "$subtract": [
+                                                    {
+                                                        "$subtract": [
+                                                            "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                                                            "$dataReceivedNetSalary.tncn.Giảm_trừ_bản_thân"
+                                                        ]
+                                                    },
+                                                    "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                                                ]
+                                            },
+                                            0.2
+                                        ]
+                                    },
+                                    1.65
+                                ]
+                            }
+                        },
+                        {
+                            "case": {
+                                "$eq": [
+                                    "$dataReceivedNetSalary.tncn.Hệ_số",
+                                    "TN*25%-3.25 triệu VND"
+                                ]
+                            },
+                            "then": {
+                                "$subtract": [
+                                    {
+                                        "$multiply": [
+                                            {
+                                                "$subtract": [
+                                                    {
+                                                        "$subtract": [
+                                                            "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                                                            "$dataReceivedNetSalary.tncn.Giảm_trừ_bản_thân"
+                                                        ]
+                                                    },
+                                                    "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                                                ]
+                                            },
+                                            2.5
+                                        ]
+                                    },
+                                    3.25
+                                ]
+                            }
+                        },
+                        {
+                            "case": {
+                                "$eq": [
+                                    "$dataReceivedNetSalary.tncn.Hệ_số",
+                                    "TN*30%-5.85 triệu VND"
+                                ]
+                            },
+                            "then": {
+                                "$subtract": [
+                                    {
+                                        "$multiply": [
+                                            {
+                                                "$subtract": [
+                                                    {
+                                                        "$subtract": [
+                                                            "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                                                            "$dataReceivedNetSalary.tncn.Giảm_trừ_bản_thân"
+                                                        ]
+                                                    },
+                                                    "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                                                ]
+                                            },
+                                            5.85
+                                        ]
+                                    },
+                                    0.3
+                                ]
+                            }
+                        },
+                        {
+                            "case": {
+                                "$eq": [
+                                    "$dataReceivedNetSalary.tncn.Hệ_số",
+                                    "TN*35%-9.85 triệu VND"
+                                ]
+                            },
+                            "then": {
+                                "$subtract": [
+                                    {
+                                        "$multiply": [
+                                            {
+                                                "$subtract": [
+                                                    {
+                                                        "$subtract": [
+                                                            "$dataReceivedNetSalary.tnct.Lương_cơ_bản",
+                                                            "$dataReceivedNetSalary.tncn.Giảm_trừ_bản_thân"
+                                                        ]
+                                                    },
+                                                    "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                                                ]
+                                            },
+                                            3.5
+                                        ]
+                                    },
+                                    9.85
+                                ]
+                            }
+                        }
+                    ],
+                    "default": 0
+                }
+            }
+        }
+    },
+    {
+        "$addFields": {
+            "public.output.jsonData.calculation.LOAN_Tien_ung_truoc": "$dataReceivedNetSalary.loan.Value"
+        }
+    },
+    {
+        "$addFields": {
+            "public.output.jsonData.calculation.Khau_tru": {
+                "$add": [
+                    {
+                        "$multiply": [
+                            "$dataReceivedNetSalary.expense.Số_học_viên_không_đủ_chỉ_tiêu.Số_tiền_HV",
+                            "$dataReceivedNetSalary.expense.Số_học_viên_không_đủ_chỉ_tiêu.Số_lượng_học_viên"
+                        ]
+                    },
+                    "$dataReceivedNetSalary.expense.Default_fee.Số_tiền_Def",
+                    "$dataReceivedNetSalary.expense.Outsourcing.Số_tiền_Outs",
+                    {
+                        "$multiply": [
+                            "$dataReceivedNetSalary.expense.Số_ngày_nghỉ_không_phép.Số_ngày",
+                            "$dataReceivedNetSalary.expense.Số_ngày_nghỉ_không_phép.Số_tiền_trên_một_ngày_nghỉ"
+                        ]
+                    },
+                    {
+                        "$sum": {
+                            "$map": {
+                                "input": "$dataReceivedNetSalary.expense.Thiếu_chỉ_tiêu",
+                                "as": "item",
+                                "in": "$$item.Số_tiền_bồi_thường"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "$addFields": {
+            "Luong_thuc_lanh": {
+                "$subtract": [
+                    "$public.output.jsonData.calculation.Total_salary_without_tax",
+                    {
+                        "$sum": [
+                            "$public.output.jsonData.calculation.Thue_thu_nhap_ca_nhan",
+                            "$public.output.jsonData.calculation.LOAN_Tien_ung_truoc",
+                            "$public.output.jsonData.calculation.Khau_tru",
+                            "$public.output.jsonData.calculation.Luong_dong_bao_hiem"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "$addFields": {
+            "personal.personalId": "$dataReceivedNetSalary.tnct.ID",
+            "personal.personalName": "$dataReceivedNetSalary.tnct.Name",
+            "personal.ver": 1
+        }
+    }
+]
